@@ -5,6 +5,7 @@ import plotly.graph_objects as go
 from anthropic import Anthropic
 import io
 import os
+import hashlib
 from datetime import datetime
 from reportlab.lib.pagesizes import A4
 from reportlab.lib import colors
@@ -57,6 +58,21 @@ section[data-testid="stSidebar"] {
         radial-gradient(circle at top right, rgba(108,99,255,.20), transparent 45%),
         linear-gradient(180deg, #0f1630 0%, #0b1020 100%);
     border-right: 1px solid var(--border);
+}
+
+/* Keep navigation always visible on desktop */
+@media (min-width: 769px) {
+    section[data-testid="stSidebar"] {
+        min-width: 290px !important;
+        max-width: 290px !important;
+    }
+    section[data-testid="stSidebar"][aria-expanded="false"] {
+        margin-left: 0 !important;
+        transform: translateX(0) !important;
+    }
+    [data-testid="collapsedControl"] {
+        display: block !important;
+    }
 }
 
 section[data-testid="stSidebar"] * {
@@ -215,6 +231,93 @@ section[data-testid="stSidebar"] * {
     border-radius: 12px;
     border: 1px solid var(--border);
 }
+
+/* ── Responsive layout ── */
+@media (max-width: 1024px) {
+    .block-container {
+        padding-left: 1rem;
+        padding-right: 1rem;
+    }
+    .hero {
+        padding: 1.2rem 1.2rem;
+        border-radius: 14px;
+    }
+    .hero h1 {
+        font-size: 1.6rem;
+    }
+    .hero p {
+        font-size: .9rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .block-container {
+        padding-top: .5rem;
+        padding-bottom: 5.6rem;
+    }
+    .kpi-card {
+        padding: .85rem .9rem;
+    }
+    .kpi-value {
+        font-size: 1.35rem;
+    }
+    .section-title {
+        font-size: 1rem;
+    }
+    .stButton > button, .stDownloadButton > button {
+        width: 100%;
+    }
+    section[data-testid="stSidebar"] {
+        display: none !important;
+    }
+    [data-testid="collapsedControl"] {
+        display: none !important;
+    }
+    [data-testid="stHorizontalBlock"] {
+        gap: .35rem !important;
+    }
+}
+
+.mobile-bottom-nav {
+    display: none;
+}
+
+@media (max-width: 768px) {
+    .mobile-bottom-nav {
+        position: fixed;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 9999;
+        background: rgba(11, 16, 32, 0.94);
+        border-top: 1px solid rgba(167,179,212,.25);
+        backdrop-filter: blur(10px);
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        padding: .35rem .2rem calc(.35rem + env(safe-area-inset-bottom));
+        gap: .15rem;
+    }
+    .mobile-bottom-nav a {
+        text-decoration: none;
+        color: #A7B3D4;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: .1rem;
+        font-size: .64rem;
+        padding: .32rem .1rem;
+        border-radius: 10px;
+        line-height: 1.1;
+    }
+    .mobile-bottom-nav a .icon {
+        font-size: 1rem;
+    }
+    .mobile-bottom-nav a.active {
+        color: #E6ECFF;
+        background: rgba(108,99,255,.28);
+    }
+}
 </style>
 """, unsafe_allow_html=True)
 
@@ -312,6 +415,85 @@ def list_reports():
             })
     files.sort(key=lambda x: x["timestamp"], reverse=True)
     return files
+
+def estimate_price_km(seed: str) -> float:
+    digest = hashlib.md5(seed.encode("utf-8")).hexdigest()
+    value = int(digest[:8], 16)
+    return round(12 + (value % 3900) / 100, 2)
+
+DUMMY_MARKET_CATALOG = {
+    "US": [
+        ("Atomic Habits", "James Clear", "Self-help"),
+        ("Fourth Wing", "Rebecca Yarros", "Fantasy"),
+        ("The Women", "Kristin Hannah", "Drama"),
+        ("Yellowface", "R.F. Kuang", "Thriller"),
+        ("The Anxious Generation", "Jonathan Haidt", "Psihologija"),
+        ("Tomorrow, and Tomorrow, and Tomorrow", "Gabrielle Zevin", "Drama"),
+        ("The Midnight Library", "Matt Haig", "Drama"),
+        ("The Covenant of Water", "Abraham Verghese", "Drama"),
+        ("Demon Copperhead", "Barbara Kingsolver", "Drama"),
+        ("The Heaven & Earth Grocery Store", "James McBride", "Drama"),
+        ("The Creative Act", "Rick Rubin", "Biznis"),
+        ("Sapiens", "Yuval Noah Harari", "Istorija"),
+    ],
+    "BA": [
+        ("Na Drini cuprija", "Ivo Andric", "Klasik"),
+        ("Dervis i smrt", "Mesa Selimovic", "Drama"),
+        ("Tvrdjava", "Mesa Selimovic", "Drama"),
+        ("Legenda o Ali-pasi", "Enes Karic", "Istorija"),
+        ("Knjiga o Uni", "Faruk Sehic", "Drama"),
+        ("Sarajevski Marlboro", "Miljenko Jergovic", "Drama"),
+        ("Gorski vijenac", "Petar II Petrovic Njegos", "Klasik"),
+        ("Bosanski lonac", "Adisa Basic", "Kuhar"),
+        ("Sin", "Aleksandar Hemon", "Drama"),
+        ("Lovac na tijela", "Nenad Velickovic", "Triler"),
+    ],
+    "RS": [
+        ("Knjiga o Milutinu", "Danko Popovic", "Klasik"),
+        ("Seobe", "Milos Crnjanski", "Klasik"),
+        ("Hazarski recnik", "Milorad Pavic", "Fantastika"),
+        ("Koreni", "Dobrica Cosic", "Drama"),
+        ("Beskrajni plavi krug", "Branko Copic", "Drama"),
+        ("Bas je bezveze", "Marko Vidojkovic", "Humor"),
+        ("Prirucnik za samopomoc", "Jelena Bacic Alimpic", "Self-help"),
+        ("Cuvam te", "Vesna Dedic", "Drama"),
+        ("Deca zla", "Miodrag Majic", "Triler"),
+        ("Sva moja radost", "Ljubica Arsic", "Drama"),
+    ],
+    "HR": [
+        ("U registraturi", "Ante Kovacic", "Klasik"),
+        ("Ciganin, ali najljepsi", "Kristian Novak", "Drama"),
+        ("Sjene na Mjesecu", "Miro Gavran", "Drama"),
+        ("Hotel Zagorje", "Ivana Bodrozic", "Drama"),
+        ("Sinovi, kceri", "Ivana Bodrozic", "Drama"),
+        ("Rikverc", "Jurica Pavicic", "Krimi"),
+        ("Noz", "Vedrana Rudan", "Drama"),
+        ("Slujkinjina prica", "Margaret Atwood", "Fantastika"),
+        ("Nadji me", "Andrej Nikolaidis", "Drama"),
+        ("Mirovanje", "Marko Pogacar", "Poezija"),
+    ],
+}
+
+ALL_BOOK_GENRES = sorted({genre for books in DUMMY_MARKET_CATALOG.values() for _, _, genre in books})
+
+@st.cache_data(ttl=3600, show_spinner=False)
+def fetch_trending_books(country_code: str, selected_genres: list[str], max_results: int = 12):
+    base = DUMMY_MARKET_CATALOG.get(country_code, DUMMY_MARKET_CATALOG["US"])
+    if selected_genres:
+        base = [item for item in base if item[2] in selected_genres]
+
+    books = []
+    for idx, (title, author, genre) in enumerate(base[:max_results]):
+        price = estimate_price_km(f"{country_code}-{title}-{author}")
+        books.append({
+            "Naslov": title,
+            "Autor": author,
+            "Zanr": genre,
+            "Datum izdanja": str(2018 + (idx % 8)),
+            "Dostupnost": "dostupno za nabavku" if idx % 3 != 0 else "nije dostupno za nabavku",
+            "Cijena": f"{price:.2f} KM (procjena)",
+        })
+    return books
 
 def plot_pie(df):
     grp = df.groupby("Kanal")["Prihod"].sum().reset_index()
@@ -510,24 +692,54 @@ def generate_pdf(df, ai_text: str) -> bytes:
     return buf.getvalue()
 
 # ── Sidebar navigation ────────────────────────────────────────────────────────
+PAGES = ["Pocetna", "Pregled", "AI Preporuke", "Trending", "Izvjestaji"]
+if "page" not in st.session_state:
+    st.session_state.page = PAGES[0]
+
+requested_page = st.query_params.get("page")
+if isinstance(requested_page, list):
+    requested_page = requested_page[0] if requested_page else None
+if requested_page in PAGES:
+    st.session_state.page = requested_page
+
 with st.sidebar:
     st.markdown("### Navigacija")
     st.markdown("Kontrolni centar aplikacije")
-    page = st.radio(
+    sidebar_page = st.radio(
         "Izaberite ekran",
-        ["Konsolidacija", "Pregled", "AI Preporuke", "Izvjestaji"],
+        PAGES,
+        index=PAGES.index(st.session_state.page),
         label_visibility="collapsed",
     )
-    st.markdown("---")
-    if st.session_state.df is None:
-        st.info("Nema učitanih podataka.")
-    else:
-        st.success(f"Podaci učitani: {len(st.session_state.df):,} redova")
+    if sidebar_page != st.session_state.page:
+        st.session_state.page = sidebar_page
+
+st.query_params["page"] = st.session_state.page
+
+page = st.session_state.page
+
+mobile_nav_items = [
+    ("Pocetna", "📥"),
+    ("Pregled", "📊"),
+    ("AI Preporuke", "🤖"),
+    ("Trending", "🔥"),
+    ("Izvjestaji", "🧾"),
+]
+mobile_nav_html = '<nav class="mobile-bottom-nav">'
+for label, icon in mobile_nav_items:
+    active_class = "active" if page == label else ""
+    href_page = label.replace(" ", "%20")
+    mobile_nav_html += (
+        f'<a class="{active_class}" href="?page={href_page}">'
+        f'<span class="icon">{icon}</span><span>{label}</span></a>'
+    )
+mobile_nav_html += "</nav>"
+st.markdown(mobile_nav_html, unsafe_allow_html=True)
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # PAGE 1 — Upload & Consolidate
 # ═══════════════════════════════════════════════════════════════════════════════
-if page == "Konsolidacija":
+if page == "Pocetna":
     st.markdown('<p class="section-title">Učitavanje podataka</p>', unsafe_allow_html=True)
 
     st.markdown("""
@@ -550,7 +762,7 @@ if page == "Konsolidacija":
     with col4:
         f_kanali   = st.file_uploader("Fajl sa kolonom Kanal", type="csv", key="kanali")
 
-    if st.button("Konsoliduj podatke"):
+    if st.button("Pregled"):
         frames = []
         source_files = [
             (f_knjizare, "Knjizara", False),
@@ -604,7 +816,7 @@ if page == "Konsolidacija":
 # ═══════════════════════════════════════════════════════════════════════════════
 if page == "Pregled":
     if st.session_state.df is None:
-        st.info("Najprije uploadujte i konsolidujte podatke u meniju **Konsolidacija**.")
+        st.info("Najprije uploadujte i konsolidujte podatke u meniju **Pocetna**.")
     else:
         df = st.session_state.df
 
@@ -695,7 +907,7 @@ if page == "Pregled":
 # ═══════════════════════════════════════════════════════════════════════════════
 if page == "AI Preporuke":
     if st.session_state.df is None:
-        st.info("Najprije uploadujte i konsolidujte podatke u meniju **Konsolidacija**.")
+        st.info("Najprije uploadujte i konsolidujte podatke u meniju **Pocetna**.")
     else:
         df = st.session_state.df
         st.markdown('<p class="section-title">AI analiza prodaje</p>', unsafe_allow_html=True)
@@ -761,7 +973,50 @@ Budi konkretan, koristi brojeve iz podataka i daj akcione preporuke. Odgovori na
             )
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# PAGE 4 — Saved Reports
+# PAGE 4 — Trending Books
+# ═══════════════════════════════════════════════════════════════════════════════
+if page == "Trending":
+    st.markdown('<p class="section-title">Trending knjiga i trzista</p>', unsafe_allow_html=True)
+    st.markdown(
+        "Testni podaci se ucitavaju iz lokalnog dummy izvora za globalni pregled i trzista na kojima poslujete."
+    )
+
+    c1, c2 = st.columns([1.5, 1])
+    selected_genres = c1.multiselect(
+        "Zanr",
+        options=ALL_BOOK_GENRES,
+        default=[],
+        placeholder="Izaberite zanr (prazno = svi)",
+    )
+    max_items = c2.number_input(
+        "Broj rezultata po trzistu",
+        min_value=1,
+        max_value=30,
+        value=10,
+        step=1,
+    )
+
+    markets = {
+        "Globalno": "US",
+        "Bosna i Hercegovina": "BA",
+        "Srbija": "RS",
+        "Hrvatska": "HR",
+    }
+
+    if st.button("Ucitaj trendove", use_container_width=True):
+        for label, code in markets.items():
+            try:
+                records = fetch_trending_books(code, selected_genres, max_results=max_items)
+                st.markdown(f"#### {label}")
+                if records:
+                    st.dataframe(pd.DataFrame(records), use_container_width=True, hide_index=True, height=320)
+                else:
+                    st.info(f"Nema dostupnih podataka za: {label}")
+            except Exception as e:
+                st.warning(f"Neuspjelo ucitavanje za {label}: {e}")
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# PAGE 5 — Saved Reports
 # ═══════════════════════════════════════════════════════════════════════════════
 if page == "Izvjestaji":
     st.markdown('<p class="section-title">Sacuvani izvjestaji</p>', unsafe_allow_html=True)
