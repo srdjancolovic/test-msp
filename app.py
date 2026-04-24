@@ -695,28 +695,22 @@ def generate_pdf(df, ai_text: str) -> bytes:
 PAGES = ["Pocetna", "Pregled", "AI Preporuke", "Trending", "Izvjestaji"]
 if "page" not in st.session_state:
     st.session_state.page = PAGES[0]
-if "last_query_page" not in st.session_state:
-    st.session_state.last_query_page = None
 
 requested_page = st.query_params.get("page")
 if isinstance(requested_page, list):
     requested_page = requested_page[0] if requested_page else None
-if requested_page in PAGES and requested_page != st.session_state.last_query_page:
+if requested_page in PAGES:
     st.session_state.page = requested_page
-    st.session_state.last_query_page = requested_page
 
 with st.sidebar:
     st.markdown("### Navigacija")
     st.markdown("Kontrolni centar aplikacije")
-    sidebar_page = st.radio(
+    st.radio(
         "Izaberite ekran",
         PAGES,
-        index=PAGES.index(st.session_state.page),
+        key="page",
         label_visibility="collapsed",
     )
-    if sidebar_page != st.session_state.page:
-        st.session_state.page = sidebar_page
-        st.session_state.last_query_page = sidebar_page
 
 page = st.session_state.page
 
